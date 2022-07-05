@@ -1,0 +1,49 @@
+# Point to proximity sector parameters
+laserscan_to_proximitygrid:
+    frame_id:   "hokuyo_link"                       # Temp (to be changed with front frame)
+    sources:     ["/hokuyo/scan", "/camera/scan"]
+    grid:       "/proximity_grid/repellors"
+    angle_min: -120.0
+    angle_max:  120.0 
+    angle_inc:  9.0         # 9 degrees
+    range_min:  0.0
+    range_max:  6.0
+    frequency:  20.0
+
+# Point to proximity sector parameters
+point_to_proximitygrid:
+    frame_id:   "hokuyo_link"                       # Temp (to be changed with front frame)
+    sources:     "/bci_command"
+    grid:       "/proximity_grid/attractors"
+    angle_min: -120.0
+    angle_max:  120.0 
+    angle_inc:  9.0         # 9 degrees
+    range_min:  0.0
+    range_max:  6.0
+    frequency:  20.0
+
+# Shared actions parameters
+shared_dynamics:
+    base_frame:                 "base_link"
+    robot_size: 0.6
+    
+    angular_repellors_strength:     0.1    # 1/nsectors?
+    angular_repellors_decay:        1.0
+    #angular_repellors_occupancy:    5.0     
+
+    angular_attractors_strength:    0.2
+    target_duration:                3.0
+
+    angular_velocity_min:   0.1
+    angular_velocity_max:   0.2
+
+    linear_velocity_min:    0.0
+    linear_velocity_max:    0.08 #0.29
+    linear_velocity_decay:  1.0
+    safe_distance_front:    0.1
+    safe_distance_lateral:  0.1
+    
+    update_rate:        20.0
+    publish_frequency: 5.0
+
+
