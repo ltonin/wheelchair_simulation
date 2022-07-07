@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="filepath"	default="/mnt/data/rosneuro_data/bochum_simulation/SIM" />
+
+	<arg name="enable_autostart"	default="True" />
+	<arg name="enable_repellors"	default="True" />
+	<arg name="enable_attractors"	default="True" />
+
+
+	<!-- Parameters -->
+	<arg name="wheelchair_description"	 default="$(find wheelchair_description)/urdf/wheelchair.urdf.xacro" />
+	<arg name="wheelchair_parameters"	 default="$(find wheelchair_launchers)/params/wheelchair.yaml" />
+	<arg name="wheelchair_navigation"	 default="$(find wheelchair_launchers)/params/navigation.yaml" />
+	<arg name="wheelchair_visualization" default="$(find wheelchair_launchers)/rviz/wheelchair_navigation_simcontrol.rviz" />
+	<arg name="goal_parameters"	 		 default="$(find wheelchair_simulation_controller)/params/goals.yaml" />
+		
+<!-- ************************************************************** -->
+<!--						Gazebo  								-->
+<!-- ************************************************************** -->
+
+	<arg name="x" default="1.8"/>
+  	<arg name="y" default="-7.8"/>
+  	<arg name="z" default="0"/>
+  	<arg name="roll" default="0"/>
+  	<arg name="pitch" default="0"/>
+  	<arg name="yaw" default="1.576"/>
+
+	<!-- Include the gazebo world (in cnbiros_wheelchair_gazebo)/worlds/ -->
+	<arg name="world" default="bochum.world" />
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find wheelchair_simulation)/worlds/$(arg world)"/>
+	</include>
+
+	
+	<!-- Spawn the wheelchair model in gazebo -->
+	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model wheelchair -x $(arg x) -y $(arg y) -z $(arg z)
+              -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)" />
+		
+<!-- ************************************************************** -->
+<!--						Wheelchair								-->
+<!-- ************************************************************** -->
+
+	<!-- Wheelchair parameter load -->
+	<rosparam subst_value="True" file="$(arg wheelchair_parameters)" command="load" />
+
+	<!-- Set the robot description parameter -->
+	<param name="robot_description" command="$(find xacro)/xacro --inorder $(find wheelchair_description)/urdf/wheelchair.urdf.xacro" />
+
+	<!-- Transformations -->
+	<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
+	<node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" />
+
+<!-- ************************************************************** -->
+<!--						Navigation								-->
+<!-- ************************************************************** -->
+
+	
+	<!-- Shared navigation -->
+	<rosparam subst_value="True" file="$(arg wheelchair_navigation)" command="load" />
+
+	<!-- Proximity Grid converters -->
+	<node pkg="proximity_grid" type="laserscan_to_proximitygrid" output="screen" name="laserscan_to_proximitygrid" /> 
+	<node pkg="proximity_grid" type="point_to_proximitygrid" output="screen" name="point_to_proximitygrid" /> 
+
+	<!-- Proximity Grid visualization -->
+	<node pkg="proximity_grid" type="proximitygrid_visualizer" output="screen" name="visualizer_repellors" > 
+		<remap from="/proximity_grid" to="proximity_grid/repellors" />
+		<remap from="/visualization" to="proximity_grid/repellors_visualization" />
+	</node>
+
+	<node pkg="proximity_grid" type="proximitygrid_visualizer" output="screen" name="visualizer_attractors" > 
+		<remap from="/proximity_grid" to="proximity_grid/attractors" />
+		<remap from="/visualization" to="proximity_grid/attractors_visualization" />
+	</node>
+
+	<!-- Shared dynamics -->	
+	<node pkg="shared_navigation" type="navigation" output="screen" name="navigation" >
+	  <rosparam param="enable_autostart" subst_value="True">$(arg enable_autostart)</rosparam>
+	  <rosparam param="enable_repellors" subst_value="True">$(arg enable_repellors)</rosparam>
+	  <rosparam param="enable_attractors" subst_value="True">$(arg enable_attractors)</rosparam>
+	</node>
+
+
+
+<!-- ************************************************************** -->
+<!--						Goal Generator							-->
+<!-- ************************************************************** -->
+
+	<node name="goalgenerator" pkg="wheelchair_simulation_controller" type="goalgenerator" output="screen" >
+		<rosparam subst_value="True" file="$(arg goal_parameters)" command="load" />
+	</node>
+	
+
+<!-- ************************************************************** -->
+<!--						Visualization							-->
+<!-- ************************************************************** -->
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(arg wheelchair_visualization)"/>
+		
+<!-- ************************************************************** -->
+<!--						Reconfigure	  							-->
+<!-- ************************************************************** -->
+
+<!--
+	<node name="reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" /> 
+-->
+
+<!-- ************************************************************** -->
+<!--						Bag recording 							-->
+<!-- ************************************************************** -->
+
+<!--	 <node name="record" type="record" pkg="rosbag" args="record -o $(arg filepath)  
+			 /cmd_vel 
+			 /odom
+			 /bci_command
+			 /hokuyo_scan
+			 /proximity_grid/attractors
+			 /proximity_grid/repellors" /> 
+-->
+
+
+</launch>
