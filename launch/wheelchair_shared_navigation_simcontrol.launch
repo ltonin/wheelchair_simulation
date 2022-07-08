@@ -12,7 +12,8 @@
 	<arg name="wheelchair_parameters"	 default="$(find wheelchair_launchers)/params/wheelchair.yaml" />
 	<arg name="wheelchair_navigation"	 default="$(find wheelchair_launchers)/params/navigation.yaml" />
 	<arg name="wheelchair_visualization" default="$(find wheelchair_launchers)/rviz/wheelchair_navigation_simcontrol.rviz" />
-	<arg name="goal_parameters"	 		 default="$(find wheelchair_simulation_controller)/params/goals.yaml" />
+	<arg name="goal_parameters"	 		 default="$(find wheelchair_simulation_controller)/params/param_goal_generator.yaml" />
+	<arg name="cmd_parameters"		 	 default="$(find wheelchair_simulation_controller)/params/param_command_generator.yaml" />
 		
 <!-- ************************************************************** -->
 <!--						Gazebo  								-->
@@ -89,6 +90,15 @@
 	<node name="goalgenerator" pkg="wheelchair_simulation_controller" type="goalgenerator" output="screen" >
 		<rosparam subst_value="True" file="$(arg goal_parameters)" command="load" />
 	</node>
+	
+<!-- ************************************************************** -->
+<!--						Command Generator							-->
+<!-- ************************************************************** -->
+
+	<node name="commandgenerator" pkg="wheelchair_simulation_controller" type="commandgenerator" output="screen" >
+		<rosparam subst_value="True" file="$(arg cmd_parameters)" command="load" />
+	</node>
+
 	
 
 <!-- ************************************************************** -->
